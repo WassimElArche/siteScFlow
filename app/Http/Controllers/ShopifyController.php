@@ -3,62 +3,35 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use GuzzleHttp\Client;
 
 class ShopifyController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function getProducts()
     {
-        return view('accueil');
-    }
+        // Créer une instance de Guzzle Client
+        $client = new Client();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        // Les informations de connexion à Shopify
+        $shopUrl = env('SHOPIFY_STORE_URL'); // Exemple: 'maboutique.myshopify.com'
+        $apiKey = env('SHOPIFY_API_KEY');
+        $apiSecret = env('SHOPIFY_API_SECRET');
+        $accessToken = env('SHOPIFY_ACCESS_TOKEN'); // Tu peux obtenir un access token lors de l'authentification
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        // Appeler l'API Shopify pour récupérer les produits
+        try {
+            $response = $client->request('GET', "https://$shopUrl/admin/api/2023-10/products.json", [
+                'headers' => [
+                    'X-Shopify-Access-Token' => $accessToken,
+                    'Content-Type' => 'application/json',
+                ],
+            ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+            $products = json_decode($response->getBody()->getContents(), true);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+            return response()->json($products);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de la connexion à Shopify', 'message' => $e->getMessage()]);
+        }
     }
 }
